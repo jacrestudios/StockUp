@@ -28,6 +28,8 @@
 			IO.socket.on("priceUpdate", IO.onPriceUpdate);
 			//Listen for timer end from Host
 			IO.socket.on("timerEnd", IO.onTimerEnd);
+			//Listen for next phase from Host
+			IO.socket.on('nextPhase', IO.onNextPhase)
 			//Listen for game end from Host
 			IO.socket.on("endedGame", IO.onEndedGame);
 		},
@@ -51,6 +53,7 @@
 			App.role === 'player' && App.Player.onPriceUpdate(data);
 		},
 		onTimerEnd: _ => App.role === 'player' && App.Player.onTimerEnd(),
+		onNextPhase: _ => App.role === 'player' && App.Player.onNextPhase(),
 		onEndedGame: data => App.role === 'player' && App.Player.onEndedGame(data)
 	};
 	 var App = {
@@ -58,6 +61,7 @@
 		role: '',
 		phase: '',
 		onConnected: data => {},
+		bindEventListeners: _ => {},
 		//@createGame Function --sends createGame to server which responds with a room id
 		createGame: _ => {
 			IO.socket.emit("createGame");
@@ -85,20 +89,34 @@
 			game_start: false,
 			//@turn Integer --Turn tracker for seasonality and game end conditions
 			turn: 0,
+			//@onCreatedGame Function --Displays host waiting screen once a Sockets.io room has been created and the host has joined it
 			onCreatedGame: data => {
 				App.Host.room = data.room;
 				App.Display.renderTemplate('hostwait');
 			},
+			//@onJoinedRoom Function --Increments player_count and lets other players know a new player joined
 			onJoinedRoom: _ => {
 				App.Host.player_count++;
 				IO.socket.emit('newPlayer', {players: App.Host.player_count})
 			},
+			//@onStartedGame Function --initializes all values necessary for gameplay and renders the host game screen
 			onStartedGame: _ => {},
+			//@onTransactionSummary Function --pushes transactions into array for summarizing
 			onTransactionSummary: data => {},
+			//@summarizeTransactions Function --iterates through transaction summary array to populate volume numbers for turn
+			summarizeTransactions: _ => {},
+			//@onPlayedCard Function --adds a played card to the cards array for the turn
 			onPlayedCard: data => {},
-			onTurnStatus: data => {}
-			
-			
+			//@resolveCards Function --parses the effects of all cards to apply price updates
+			resolveCards: _ => {},
+			//@onTurnStatus Function --pushes received turn status into player_statuses array
+			onTurnStatus: data => {},
+			//@trackTimer Function --Needed to track countdown value
+			trackTimer: _ => {},
+			//@countdownTimer Function --Used to move timer down
+			countdownTimer: _ => {},
+			//@nextPhase Function --calculates the effects of the current phase and starts the next phase
+			nextPhase: _ => {},
 		},
 		Player: {
 			//@leader Boolean --Used to provide a "start up" button to the first joined player
@@ -130,9 +148,14 @@
 			playCard: _ => {IO.socket.emit()},
 			sendTurnStatus: _ => {IO.socket.emit()},
 			onPriceUpdate: data => {},
+			onNextPhase: data => {}
 		},
 		Display: {
+			main : document.getElementById('main'),
 			renderTemplate: template => {},
+		},
+		Deck: {
+			
 		},
 	};
 	IO.init();
