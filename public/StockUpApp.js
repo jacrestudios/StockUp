@@ -8,7 +8,7 @@
 		bindSocketListeners: _ => {
 			IO.socket.on("connected", IO.onConnected);
 			IO.socket.on("createdGame", IO.onCreatedGame);
-			IO.socket.on("joinedRoom", IO.onJoinedGame);
+			IO.socket.on("joinedRoom", IO.onJoinedRoom);
 			IO.socket.on("roomNotFound", IO.onRoomNotFound);
 			IO.socket.on("startedGame", IO.onStartedGame);
 			
