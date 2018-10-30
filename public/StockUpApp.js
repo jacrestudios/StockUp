@@ -43,6 +43,15 @@
 			App.role === 'host' && App.Host.onStartedGame();
 			App.role === 'player' && App.Player.onStartedGame();
 		},
+		onPlayedCard: data => App.role === 'host' && App.Host.onPlayedCard(data),
+		onTransactionSummary: data => App.role === 'host' && App.Host.onTransactionSummary(data),
+		onTurnStatus: data => App.role === 'host' && App.Host.onTurnStatus(data),
+		onPriceUpdate: data => {
+			App.role === 'host' && App.Host.onPriceUpdate(data);
+			App.role === 'player' && App.Player.onPriceUpdate(data);
+		},
+		onTimerEnd: _ => App.role === 'player' && App.Player.onTimerEnd(),
+		onEndedGame: data => App.role === 'player' && App.Player.onEndedGame(data)
 	};
 	 var App = {
 	 	//@role String --Used to run different functions depending on incoming broadcasts
