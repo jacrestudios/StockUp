@@ -1,8 +1,8 @@
-(() => {
-	IO : {
-		init: () => {}
-	}
-	App : {
+( _ => {
+	var IO = {
+		init: _ => {},
+	};
+	 var App = {
 		role: '',
 		Host: {
 			player_count: 0,
@@ -24,7 +24,7 @@
 		Display: {
 			
 		},
-	}
+	};
 	IO.init();
 })();
 
