@@ -61,7 +61,6 @@
 		role: '',
 		phase: '',
 		onConnected: data => {},
-		bindEventListeners: _ => {},
 		//@createGame Function --sends createGame to server which responds with a room id
 		createGame: _ => {
 			IO.socket.emit("createGame");
@@ -100,13 +99,22 @@
 				IO.socket.emit('newPlayer', {players: App.Host.player_count})
 			},
 			//@onStartedGame Function --initializes all values necessary for gameplay and renders the host game screen
-			onStartedGame: _ => {},
+			onStartedGame: _ => {
+				App.Display.renderTemplate('hostgame');
+			},
 			//@onTransactionSummary Function --pushes transactions into array for summarizing
-			onTransactionSummary: data => {},
+			onTransactionSummary: data => {
+				App.Host.transactions.push(data);
+			},
 			//@summarizeTransactions Function --iterates through transaction summary array to populate volume numbers for turn
-			summarizeTransactions: _ => {},
+			summarizeTransactions: _ => {
+				App.Host.transactions.forEach((transaction) => {
+					
+				});
+			},
 			//@onPlayedCard Function --adds a played card to the cards array for the turn
 			onPlayedCard: data => {},
+			playMarketCard: _ => {},
 			//@resolveCards Function --parses the effects of all cards to apply price updates
 			resolveCards: _ => {},
 			//@onTurnStatus Function --pushes received turn status into player_statuses array
@@ -117,6 +125,8 @@
 			countdownTimer: _ => {},
 			//@nextPhase Function --calculates the effects of the current phase and starts the next phase
 			nextPhase: _ => {},
+			moveMarket: _ => {},
+			updateStocks: _ => {},
 		},
 		Player: {
 			//@leader Boolean --Used to provide a "start up" button to the first joined player
@@ -131,20 +141,37 @@
 			ready: false,
 			//@joinRoom Function --Sends a room id to attempt to join
 			joinRoom: room_id => IO.socket.emit('joinGame', {room: room_id}),
-			//@startGame Function --Sends
-			startGame: _ => IO.socket.emit('startGame'),
+			//@startGame Function --Sends start game message if enough players have joined
+			startGame: _ => App.Player.playercount > 2 ? IO.socket.emit('startGame') : (_=>App.Display.error_msg.innerHTML = `Not enough players.  ${3-App.Player.player_count} more players needed`)(),
 			//@onJoinedRoom Function --If room exists, then display waiting screen until game start, tell everyone
 			onJoinedRoom: data => {
 				App.Display.renderTemplate('playerwait');
 			},
 			//@onNewPlayerJoined Function --Allows setting of leader attribute and player_count
-			onNewPlayerJoined: data => {},
-			onRoomNotFound: _ => {},
+			onNewPlayerJoined: data => {
+				//Probably should change this to if(data.players === 0){App.Player.leader = true} for readability
+				data.players === 0 && (_=>App.Player.leader = true)();
+				App.Player.leader && (_=>App.Player.player_count = data.players)();
+			},
+			onRoomNotFound: _ => {
+				 App.Display.error_msg.innerHTML = "Room not found"
+			},
+			onStartedGame: _ => {
+				App.Display.renderTemplate('playergame');
+			},
 			drawCards: _ => {},
 			//@postTransaction Function --Validates transactions, posts it to array, and updates relative cash and stock values
-			postTransaction: (type, stock, volume) => {},
+			postTransaction: (type, stock, volume) => {
+				App.Player.transactions.push({type: type, stock: stock, volume: volume})
+			},
 			//@sendTransactionSummary Function --Summarizes transactions for turn and sends volume information to Host
-			sendTransactionSummary: _ => {IO.socket.emit()},
+			sendTransactionSummary: _ => {
+				let summary = {};
+				App.Player.transactions.forEach((transaction) => {
+					console.log(`${transaction.type} ${transaction.volume} ${transaction.stock}`)
+				});
+				IO.socket.emit();
+			},
 			playCard: _ => {IO.socket.emit()},
 			sendTurnStatus: _ => {IO.socket.emit()},
 			onPriceUpdate: data => {},
@@ -152,12 +179,16 @@
 		},
 		Display: {
 			main : document.getElementById('main'),
+			error_msg : {},
 			renderTemplate: template => {},
+			bindEventListeners: template => {},
 		},
-		Deck: {
-			
+		Decks: {
+			Analyst_Deck: {},
+			Market_Deck : {},
 		},
 	};
 	IO.init();
+	App.Display.bindEventListeners('index')
 })();
 
