@@ -6,8 +6,15 @@ exports.init = (sio, socket) => {
     rsocket = socket;
     rsocket.emit('connected')
     
-    //Events
+    //Socket Listeners
+    
     //Common
+    rsocket.on();
     //Host
+    rsocket.on('createGame', onCreateGame);
     //Player
+    rsocket.on();
+    
+    //Listener Functions
+    var onCreateGame = data => {};
 }
