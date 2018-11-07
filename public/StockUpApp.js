@@ -81,7 +81,12 @@
 			//@cards Object Array --Holds cards played by players to resolve at end of card turn
 			cards: [],
 			//@stocks Object Array --Holds information about stock price and effects of stocks
-			stocks: [],
+			stocks: [
+				{name: 'ACRN', last_price: 0, new_price: 0, volume: 0},
+				{name: 'SHRM', last_price: 0, new_price: 0, volume: 0},
+				{name: 'MLN', last_price: 0, new_price: 0, volume: 0},
+				{name: 'BRRY', last_price: 0, new_price: 0, volume: 0},
+				{name: 'APPL', last_price: 0, new_price: 0, volume: 0}],
 			//@player_status Object Array --Holds player end turn status information
 			player_statuses: [],
 			//@game_start Boolean --Flag to prevent new game creation or ongoing game joining
@@ -102,7 +107,7 @@
 			onStartedGame: _ => {
 				App.Display.renderTemplate('hostgame');
 			},
-			//@onTransactionSummary Function --pushes transactions into array for summarizing
+			//@onTransactionSummary Function --pushes transactions into array for summarizing when sent from players
 			onTransactionSummary: data => {
 				App.Host.transactions.push(data);
 			},
@@ -135,7 +140,13 @@
 			name: '',
 			networth: '',
 			cash: 0,
-			stocks: [],
+			stocks: [
+					{name: 'ACRN', average_price: 0, amount: 0, last_price: 0, new_price: 0},
+					{name: 'SHRM', average_price: 0, amount: 0, last_price: 0, new_price: 0},
+					{name: 'MLN', average_price: 0, amount: 0, last_price: 0, new_price: 0},
+					{name: 'BRRY', average_price: 0, amount: 0, last_price: 0, new_price: 0},
+					{name: 'APPL', average_price: 0, amount: 0, last_price: 0, new_price: 0},
+					],
 			cards: [],
 			transactions: [],
 			ready: false,
@@ -162,6 +173,13 @@
 			drawCards: _ => {},
 			//@postTransaction Function --Validates transactions, posts it to array, and updates relative cash and stock values
 			postTransaction: (type, stock, volume) => {
+				let position = App.Player.stocks.find(stock => stock.name === stock)
+				if(type === "buy" && position.){
+					
+				}
+				if(type === "sell"){
+					if(a){}
+				}
 				App.Player.transactions.push({type: type, stock: stock, volume: volume})
 			},
 			//@sendTransactionSummary Function --Summarizes transactions for turn and sends volume information to Host
