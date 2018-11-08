@@ -225,7 +225,12 @@
 			onNextPhase: data => {}
 		},
 		Display: {
-			error_msg : {},
+			template_array: [
+				{template_name: "hostwait", template_element: {}},
+				{template_name: "hostgame", template_element: {}},
+                {template_name: "playerwait", template_element: {}},
+                {template_name: "playerjoin", template_element: {}},
+            ],
 			renderTemplate: template => {},
 			bindEventListeners: template => {},
 			getTemplate: (template) => {
@@ -251,6 +256,12 @@
                     App.Display.destroyTemplate().appendChild(template.template_element.content)
                 }   
             },
+             cacheTemplates: () => {
+                App.Templates.template_array.forEach((item) => {
+                    App.Templates.getTemplate(item);
+                })
+            },
+            
             
 		},
 		Decks: {
