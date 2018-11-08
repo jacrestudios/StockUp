@@ -146,8 +146,20 @@
 			countdownTimer: _ => {},
 			//@nextPhase Function --calculates the effects of the current phase and starts the next phase
 			nextPhase: _ => {},
-			moveMarket: _ => {},
-			updateStocks: _ => {},
+			moveMarket: _ => {
+				let magnitudes = [1,1,1,2,2,3];
+				let directions = [-1,1];
+				//@dieRoll Function --returns a random number between 0 and vals
+				let dieRoll = vals => Math.floor((Math.random() * vals));
+				App.Host.stocks.forEach( stock => {
+					stock.last_price = stock.current_price;
+					stock.current_price += magnitudes[dieRoll(6)]*directions[dieRoll(2)]
+				}); 
+				 
+			},
+			updateStocks: _ => {
+				IO.socket.emit();
+			},
 		},
 		Player: {
 			//@leader Boolean --Used to provide a "start up" button to the first joined player
@@ -196,12 +208,12 @@
 					position.current_price*(volume/(position.amount+volume));
 					App.Player.cash -= position.current_price*volume;
 					position.amount += volume;
-					App.Player.transactions.push({stock: stock, volume: volume})
+					App.Player.transactions.push({stock, volume})
 				}
 				else if(type === "sell" && volume < position.amount){
 					position.amount -= volume;
 					App.Player.cash += position.current_price*volume;
-					App.Player.transactions.push({stock: stock, volume: -volume})
+					App.Player.transactions.push({stock, volume: -volume})
 				}
 
 			},
@@ -225,22 +237,26 @@
 			onNextPhase: data => {}
 		},
 		Display: {
-			template_array: [
-				{template_name: "hostwait", template_element: {}},
-				{template_name: "hostgame", template_element: {}},
-                {template_name: "playerwait", template_element: {}},
-                {template_name: "playerjoin", template_element: {}},
+			templates: [
+				{name: "hostwait", element: {}},
+				{name: "hostgame", element: {}},
+                {name: "playerwait", element: {}},
+                {name: "playerjoin", element: {}},
+                {name: "playergame", element: {}},
             ],
-			renderTemplate: template => {},
-			bindEventListeners: template => {},
+			createTemplate: (html) => {
+                let template = document.createElement('template');
+                template.innerHTML = html;
+                return template;
+            },
 			getTemplate: (template) => {
                 let xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = () => {
                     if(xhr.readyState === xhr.DONE && xhr.status === 200){
-                        template.template_element = App.Templates.createTemplate(xhr.responseText);
+                        template.element = App.Display.createTemplate(xhr.responseText);
                     }
                 }
-                xhr.open('GET', `/templates/${template.template_name}.html`, true);
+                xhr.open('GET', `/templates/${template.name}.html`, true);
                 xhr.send()
             },
             destroyTemplate: () => {
@@ -250,32 +266,56 @@
                 }
                 return main_container;
             },
-            renderTemplate: (template_name) => {
-                let template = App.Display.referenceTemplate(template_name);
-                if(template.template_element.content){
-                    App.Display.destroyTemplate().appendChild(template.template_element.content)
+            renderTemplate: template_name => {
+                let template = App.Display.templates.find(template_name => template_name === template.name);
+                if(template.element.content){
+                    App.Display.destroyTemplate().appendChild(template.element.content)
                 }   
             },
-             cacheTemplates: () => {
-                App.Templates.template_array.forEach((item) => {
-                    App.Templates.getTemplate(item);
+             cacheTemplates: _ => {
+                App.Display.templates.forEach((template) => {
+                    App.Display.getTemplate(template.name);
                 })
             },
-            
-            
 		},
 		Decks: {
+			
 			Analyst_Deck: {
 				deck: [],
-				init: _ => {}
+				init: _ => {
+					App.Decks.Analyst_Deck.deck.generic_shuffle();
+				}
 			},
 			Market_Deck : {
 				deck: [],
-				init: _ => {}
+				//Not sure how to build card obects
+				cards: [
+					{copies: 4, stock: "SHRM", effect: 1}
+				],
+				init: _ => {
+					App.Decks.Market_Deck.cards.forEach( card => {
+						for(let copies = 0; copies < card.copies; copies++)
+						App.Decks.Market_Deck.deck.push(card)
+					})
+					
+					App.Decks.Market_Deck.deck.generic_shuffle();
+				}
 			},
 		},
 	};
 	IO.init();
 	App.Display.bindEventListeners('index')
+	//Build a generic_shuffle function onto Array prototype giving all arrays the ability to shuffle
+	Array.prototype.generic_shuffle = _ => {
+		var len = this.length + 1;
+		while (len--) {
+			var random_pos = Math.floor((Math.random() * len))
+			var item = this[random_pos];
+
+			this[random_pos] = this[0];
+			this[0] = item;
+		}
+		return this;
+	}
 })();
 
