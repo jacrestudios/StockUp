@@ -82,11 +82,11 @@
 			cards: [],
 			//@stocks Object Array --Holds information about stock price and effects of stocks
 			stocks: [
-				{name: 'ACRN', last_price: 0, new_price: 0, volume: 0},
-				{name: 'SHRM', last_price: 0, new_price: 0, volume: 0},
-				{name: 'MLN', last_price: 0, new_price: 0, volume: 0},
-				{name: 'BRRY', last_price: 0, new_price: 0, volume: 0},
-				{name: 'APPL', last_price: 0, new_price: 0, volume: 0}],
+				{name: 'ACRN', last_price: 0, current_price: 0, volume: 0},
+				{name: 'SHRM', last_price: 0, current_price: 0, volume: 0},
+				{name: 'MLN', last_price: 0, current_price: 0, volume: 0},
+				{name: 'BRRY', last_price: 0, current_price: 0, volume: 0},
+				{name: 'APPL', last_price: 0, current_price: 0, volume: 0}],
 			//@player_status Object Array --Holds player end turn status information
 			player_statuses: [],
 			//@game_start Boolean --Flag to prevent new game creation or ongoing game joining
@@ -113,8 +113,19 @@
 			},
 			//@summarizeTransactions Function --iterates through transaction summary array to populate volume numbers for turn
 			summarizeTransactions: _ => {
+				let summary = {
+					ACRN: 0,
+					SHRM: 0,
+					BRRY: 0,
+					APPL: 0,
+					MLN: 0
+				}
 				App.Host.transactions.forEach((transaction) => {
-					
+					summary.ACRN += Math.abs(transaction.ACRN);
+					summary.SHRM += Math.abs(transaction.SHRM);
+					summary.BRRY += Math.abs(transaction.BRRY);
+					summary.APPL += Math.abs(transaction.APPL);
+					summary.MLN += Math.abs(transaction.MLN);					
 				});
 			},
 			//@onPlayedCard Function --adds a played card to the cards array for the turn
@@ -141,11 +152,11 @@
 			networth: '',
 			cash: 0,
 			stocks: [
-					{name: 'ACRN', average_price: 0, amount: 0, last_price: 0, new_price: 0},
-					{name: 'SHRM', average_price: 0, amount: 0, last_price: 0, new_price: 0},
-					{name: 'MLN', average_price: 0, amount: 0, last_price: 0, new_price: 0},
-					{name: 'BRRY', average_price: 0, amount: 0, last_price: 0, new_price: 0},
-					{name: 'APPL', average_price: 0, amount: 0, last_price: 0, new_price: 0},
+					{name: 'ACRN', average_price: 0, amount: 0, last_price: 0, current_price: 0},
+					{name: 'SHRM', average_price: 0, amount: 0, last_price: 0, current_price: 0},
+					{name: 'MLN', average_price: 0, amount: 0, last_price: 0, current_price: 0},
+					{name: 'BRRY', average_price: 0, amount: 0, last_price: 0, current_price: 0},
+					{name: 'APPL', average_price: 0, amount: 0, last_price: 0, current_price: 0},
 					],
 			cards: [],
 			transactions: [],
@@ -174,21 +185,34 @@
 			//@postTransaction Function --Validates transactions, posts it to array, and updates relative cash and stock values
 			postTransaction: (type, stock, volume) => {
 				let position = App.Player.stocks.find(stock => stock.name === stock)
-				if(type === "buy" && position.){
-					
+				if(type === "buy" && position.current_price*volume < App.Player.cash){
+					//Update new average price based on current_price
+					position.average_price = position.average_price*(position.amount/(position.amount+volume)) + \
+					position.current_price*(volume/(position.amount+volume));
+					App.Player.cash -= position.current_price*volume;
+					position.amount += volume;
+					App.Player.transactions.push({stock: stock, volume: volume})
 				}
-				if(type === "sell"){
-					if(a){}
+				else if(type === "sell" && volume < position.amount){
+					position.amount -= volume;
+					App.Player.cash += position.current_price*volume;
+					App.Player.transactions.push({stock: stock, volume: -volume})
 				}
-				App.Player.transactions.push({type: type, stock: stock, volume: volume})
+
 			},
 			//@sendTransactionSummary Function --Summarizes transactions for turn and sends volume information to Host
 			sendTransactionSummary: _ => {
-				let summary = {};
+				let summary = {
+					ACRN: 0;
+					SHRM: 0;
+					BRRY: 0;
+					APPL: 0;
+					MLN: 0;
+				};
 				App.Player.transactions.forEach((transaction) => {
-					console.log(`${transaction.type} ${transaction.volume} ${transaction.stock}`)
+					summary[transaction.name] += transaction.volume
 				});
-				IO.socket.emit();
+				IO.socket.emit('transactionSummary', summary);
 			},
 			playCard: _ => {IO.socket.emit()},
 			sendTurnStatus: _ => {IO.socket.emit()},
