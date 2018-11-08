@@ -129,8 +129,13 @@
 				});
 			},
 			//@onPlayedCard Function --adds a played card to the cards array for the turn
-			onPlayedCard: data => {},
-			playMarketCard: _ => {},
+			onPlayedCard: data => {
+				App.Host.cards.push(data);
+			},
+			//@playMarketCard Function --adds a market card to the array of played cards
+			playMarketCard: _ => {
+				App.Host.cards.push(App.Decks.Market_Deck.deck.pop());
+			},
 			//@resolveCards Function --parses the effects of all cards to apply price updates
 			resolveCards: _ => {},
 			//@onTurnStatus Function --pushes received turn status into player_statuses array
@@ -187,7 +192,7 @@
 				let position = App.Player.stocks.find(stock => stock.name === stock)
 				if(type === "buy" && position.current_price*volume < App.Player.cash){
 					//Update new average price based on current_price
-					position.average_price = position.average_price*(position.amount/(position.amount+volume)) + \
+					position.average_price = position.average_price*(position.amount/(position.amount+volume)) + 
 					position.current_price*(volume/(position.amount+volume));
 					App.Player.cash -= position.current_price*volume;
 					position.amount += volume;
@@ -203,11 +208,11 @@
 			//@sendTransactionSummary Function --Summarizes transactions for turn and sends volume information to Host
 			sendTransactionSummary: _ => {
 				let summary = {
-					ACRN: 0;
-					SHRM: 0;
-					BRRY: 0;
-					APPL: 0;
-					MLN: 0;
+					ACRN: 0,
+					SHRM: 0,
+					BRRY: 0,
+					APPL: 0,
+					MLN: 0,
 				};
 				App.Player.transactions.forEach((transaction) => {
 					summary[transaction.name] += transaction.volume
@@ -220,14 +225,43 @@
 			onNextPhase: data => {}
 		},
 		Display: {
-			main : document.getElementById('main'),
 			error_msg : {},
 			renderTemplate: template => {},
 			bindEventListeners: template => {},
+			getTemplate: (template) => {
+                let xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = () => {
+                    if(xhr.readyState === xhr.DONE && xhr.status === 200){
+                        template.template_element = App.Templates.createTemplate(xhr.responseText);
+                    }
+                }
+                xhr.open('GET', `/templates/${template.template_name}.html`, true);
+                xhr.send()
+            },
+            destroyTemplate: () => {
+                let main_container = document.getElementById("main-container");
+                while(main_container.lastChild){
+                    main_container.removeChild(main_container.lastChild);
+                }
+                return main_container;
+            },
+            renderTemplate: (template_name) => {
+                let template = App.Display.referenceTemplate(template_name);
+                if(template.template_element.content){
+                    App.Display.destroyTemplate().appendChild(template.template_element.content)
+                }   
+            },
+            
 		},
 		Decks: {
-			Analyst_Deck: {},
-			Market_Deck : {},
+			Analyst_Deck: {
+				deck: [],
+				init: _ => {}
+			},
+			Market_Deck : {
+				deck: [],
+				init: _ => {}
+			},
 		},
 	};
 	IO.init();
